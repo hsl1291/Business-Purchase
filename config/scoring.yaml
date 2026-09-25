@@ -1,0 +1,64 @@
+# Configuration for src/ingest.py and src/score.py
+#
+# Edit `field_map` to match whatever license-board or Secretary-of-State CSV
+# you're actually working with. Column names vary a lot by state and agency,
+# so this is the one place that needs to change per source.
+
+field_map:
+  # target field: source column name in your raw CSV (case-sensitive)
+  business_name: "Business Name"
+  license_number: "License Number"
+  license_type: "License Type"
+  license_status: "Status"
+  issue_date: "Original Issue Date"
+  renewal_date: "Expiration Date"
+  principal_name: "Owner Name"
+  address: "Address"
+  city: "City"
+  state: "State"
+  zip: "Zip"
+  naics_code: "NAICS"          # optional; leave blank string if not present
+  employee_count: ""            # optional; leave blank if not present
+
+# Date format used by issue_date / renewal_date in the raw CSV (Python strptime)
+date_format: "%m/%d/%Y"
+
+# Hard filters applied before scoring. Rows failing any of these are dropped
+# from the ranked output (they still appear in the normalized output).
+filters:
+  license_status_include: ["Active", "ACTIVE", "active"]
+  min_license_age_years: 5      # drop brand-new businesses; too early to sell
+  exclude_business_name_contains: ["LLC series", "DBA test"]  # junk-data guard
+
+# Signal weights. Each signal is normalized to 0-1 before weighting, so
+# weights are relative to each other, not absolute. These are starting
+# guesses -- see README for how to refit them once you have outreach data.
+weights:
+  license_age: 0.30            # older license -> older owner (proxy)
+  single_principal: 0.20        # no evidence of a second officer/family name
+  renewal_lapse: 0.20           # late/lapsed renewal history -> disengagement
+  stale_web_presence: 0.15      # no website, or enrichment flags it stale
+  owns_real_estate: 0.10        # owner also owns the property (needs enrichment)
+  size_band_fit: 0.05           # employee count within your target range
+
+# Signal parameters
+license_age:
+  # years since issue_date mapped to a 0-1 score; caps at max_years
+  max_years: 30
+
+renewal_lapse:
+  # a renewal_date in the past (relative to "today") counts as lapsed
+  lapse_penalty_score: 1.0
+  on_time_score: 0.0
+
+size_band_fit:
+  min_employees: 5
+  max_employees: 50
+  # employee_count outside this band scores 0; inside scores 1
+  # (only used if employee_count is populated -- see field_map above)
+
+# Enrichment signals (stale_web_presence, owns_real_estate) require external
+# lookups this repo does not perform automatically (Google Places API, county
+# assessor records). If you haven't run that enrichment yet, leave the
+# corresponding CSV columns blank and score.py will treat them as 0 (neutral,
+# non-penalizing) rather than error out -- see src/score.py for details.

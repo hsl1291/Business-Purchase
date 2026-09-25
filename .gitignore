@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Raw license/SOS exports may contain personal info (owner names, addresses).
+# Keep them local unless you've confirmed they're fine to commit.
+data/raw/*
+!data/raw/.gitkeep
+data/normalized.csv
+data/ranked.csv
+data/ranked_with_estimate.csv

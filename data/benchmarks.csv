@@ -1,0 +1,20 @@
+naics_code,industry,revenue_per_employee,sde_margin,multiple_low,multiple_high
+811111,Auto Repair & Maintenance,120000,0.18,2.0,2.8
+722511,Full-Service Restaurants,90000,0.10,1.5,2.5
+722513,Limited-Service Restaurants,110000,0.12,1.8,2.5
+812112,Beauty Salons,85000,0.20,2.0,2.8
+812113,Nail Salons,80000,0.22,2.0,2.8
+811121,Auto Body & Paint,130000,0.16,2.2,3.0
+238220,HVAC Contractors,140000,0.15,2.5,3.5
+238910,Site Prep / Excavation Contractors,160000,0.14,2.5,3.5
+561720,Janitorial Services,70000,0.15,2.5,3.5
+812910,Pet Care Services (non-veterinary),75000,0.20,2.2,3.0
+541213,Tax Preparation Services,95000,0.30,2.5,3.5
+621210,Dental Offices,180000,0.25,3.0,4.5
+812199,Other Personal Care Services,80000,0.18,2.0,2.8
+811192,Car Washes,100000,0.25,2.5,3.5
+445120,Convenience Stores,250000,0.06,2.0,2.8
+722320,Caterers,95000,0.12,1.8,2.5
+423xxx,Wholesale Distribution (general),300000,0.08,2.5,3.5
+811310,Commercial Equipment Repair & Maintenance,140000,0.16,2.5,3.5
+default,Unmapped / Generic Small Business,100000,0.15,2.0,3.0

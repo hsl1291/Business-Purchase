@@ -1,0 +1,23 @@
+# Sample input for src/valuation.py.
+# Numbers here are illustrative -- an auto repair shop doing roughly
+# $700k/year revenue with a single owner-operator.
+
+pnl:
+  net_profit: 95000
+  owner_compensation: 65000
+  add_backs:
+    depreciation: 18000
+    interest_on_business_debt: 6000
+    owners_personal_vehicle: 8000
+    one_time_hvac_repair: 4000
+
+deal_assumptions:
+  multiple_low: 2.2
+  multiple_high: 2.8
+  down_payment_pct: 0.10
+  annual_rate: 0.115        # SBA 7(a) variable rate ballpark; update to current rate
+  term_years: 10
+  min_dscr: 1.25
+  owner_draw_reserve: 0     # set >0 if you need to reserve cash for your own living expenses
+  # market_manager_salary: 55000   # uncomment to also see an EBITDA figure
+  asking_price: 320000       # optional: set to test a specific ask against DSCR
