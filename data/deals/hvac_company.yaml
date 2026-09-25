@@ -1,0 +1,18 @@
+deal_name: Springfield HVAC Co
+
+pnl:
+  net_profit: 210000
+  owner_compensation: 90000
+  add_backs:
+    depreciation: 35000
+    interest_on_business_debt: 12000
+
+deal_assumptions:
+  multiple_low: 2.8
+  multiple_high: 3.5
+  down_payment_pct: 0.10
+  annual_rate: 0.115
+  term_years: 10
+  min_dscr: 1.25
+  market_manager_salary: 75000
+  asking_price: 1150000
