@@ -23,9 +23,11 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
+from pathlib import Path
 
 import pandas as pd
 import requests
@@ -84,17 +86,53 @@ def score_stale_from_place(place: dict | None) -> float:
     return 0.0
 
 
-def enrich_web_presence(df: pd.DataFrame, api_key: str, rate_limit_sec: float = 0.1) -> pd.Series:
+DEFAULT_CACHE_PATH = "data/places_cache.json"
+
+
+def _cache_key(name: str, city: str, state: str) -> str:
+    return "|".join(part.strip().lower() for part in (name, city, state))
+
+
+def _load_cache(path: str) -> dict:
+    try:
+        return json.loads(Path(path).read_text())
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {}
+
+
+def enrich_web_presence(
+    df: pd.DataFrame,
+    api_key: str,
+    rate_limit_sec: float = 0.1,
+    cache_path: str | None = DEFAULT_CACHE_PATH,
+) -> pd.Series:
+    """Look each business up in Places, caching results on disk so re-runs
+    (and re-scoring after tweaking weights) don't re-bill the API. A cached
+    "not found" is stored as null so it isn't retried either; delete the
+    cache file to force a refresh.
+    """
+    cache = _load_cache(cache_path) if cache_path else {}
     scores = []
+    n_api_calls = 0
     for _, row in df.iterrows():
-        place = places_lookup(
-            str(row.get("business_name", "")),
-            str(row.get("city", "")),
-            str(row.get("state", "")),
-            api_key,
-        )
+        name, city, state = (str(row.get(k, "")) for k in ("business_name", "city", "state"))
+        key = _cache_key(name, city, state)
+        if key in cache:
+            place = cache[key]
+        else:
+            place = places_lookup(name, city, state, api_key)
+            n_api_calls += 1
+            time.sleep(rate_limit_sec)
+            # Only cache real answers; None from a network error would
+            # poison the cache, so cache "found nothing" only on a clean call.
+            if place is not None:
+                cache[key] = place
         scores.append(score_stale_from_place(place))
-        time.sleep(rate_limit_sec)
+
+    if cache_path and n_api_calls:
+        Path(cache_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(cache_path).write_text(json.dumps(cache))
+    print(f"  {len(df) - n_api_calls} cache hits, {n_api_calls} API calls")
     return pd.Series(scores, index=df.index)
 
 

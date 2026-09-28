@@ -1,0 +1,23 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m pytest tests -q
+      - name: Smoke-test the pipeline on sample data
+        run: |
+          python run.py data/sample_raw_licenses.csv --out-dir /tmp/out
+          python tools/make_call_sheet.py /tmp/out/ranked_with_estimate.csv -n 5 -o /tmp/out/sheet.csv
+          python -m src.valuation data/sample_pnl.yaml
+          python -m src.deal_tracker data/deals -o /tmp/out/deals.csv

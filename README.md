@@ -25,12 +25,23 @@ industry risk — is still yours.
 | `src/deal_tracker.py` | Compares multiple candidate deals side by side, sorted by financing headroom |
 | `run.py` | One-command pipeline: raw CSV → ingest → score → estimate |
 | `tools/refit_weights.py` | Refits `score.py`'s signal weights from logged outreach outcomes |
-| `tests/` | Unit tests for the scoring and valuation math |
+| `src/scorecard.py` | Risk scorecard that places a business inside its multiple band (owner dependence, trend, concentration, records) |
+| `tools/suggest_field_map.py` | Reads any raw license CSV and drafts the `field_map` + date format for `config/scoring.yaml` |
+| `tools/make_call_sheet.py` | Top-N outreach sheet with a plain-English "why flagged" per business |
+| `tests/` | Unit tests for scoring, valuation, enrichment, and the tools |
 
 ## Quickstart
 
+With your own license export, start by drafting the column mapping:
+
 ```bash
-pip install -r requirements.txt
+python tools/suggest_field_map.py data/raw/your_export.csv   # paste output into config/scoring.yaml
+```
+
+Then:
+
+```bash
+pip install -r requirements.txt   # or: make install   (make demo runs everything on sample data)
 
 # All-in-one: ingest -> score -> rough estimate, in one command
 python run.py data/sample_raw_licenses.csv --config config/scoring.yaml \
@@ -48,6 +59,9 @@ python -m src.score data/ranked_enriched.csv --config config/scoring.yaml -o dat
 
 # Post-NDA valuation once you have a P&L (see data/sample_pnl.yaml for the format)
 python -m src.valuation data/sample_pnl.yaml
+
+# Turn the ranked list into an outreach sheet (top 25 uncontacted, with reasons)
+python tools/make_call_sheet.py data/ranked_with_estimate.csv -n 25 -o data/call_sheet.csv
 
 # Compare several live deals side by side (one YAML per deal, same format as above)
 python -m src.deal_tracker data/deals/ -o data/deal_comparison.csv
@@ -88,6 +102,13 @@ suggested direction against your own judgment before updating the weights.
 - **The pre-contact estimate (`src/estimate.py`) is a rough range, not a
   valuation.** It's built from industry averages, not the business's actual
   numbers. Never quote it to a seller — use it only to prioritize your list.
+- **Set `owner_draw_reserve` honestly.** SDE includes the owner's pay. If the
+  reserve is 0, DSCR assumes you'll work for free and every deal looks
+  better than a lender will see it. `valuation.py` warns when it's 0. The
+  stress test shows how much SDE overstatement a deal can absorb before it
+  stops financing; sellers inflate add-backs, so lean on it.
+- **The scorecard (`src/scorecard.py`) is only as good as your inputs.** Its
+  adjustments are conventions, not market data. Tune them to your deals.
 - **The post-NDA valuation (`src/valuation.py`) automates arithmetic, not
   judgment.** It will not tell you whether an add-back is legitimate, whether
   the tax returns match the books, or whether the owner is core to customer

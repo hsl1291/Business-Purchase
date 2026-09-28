@@ -17,6 +17,12 @@ import sys
 
 import yaml
 
+from src.scorecard import suggested_multiple
+
+
+# SDE shortfalls to test against the asking price (fraction of claimed SDE lost)
+STRESS_HAIRCUTS = (0.0, 0.10, 0.20, 0.30)
+
 
 def compute_sde(pnl: dict) -> float:
     """SDE = net profit + owner compensation + add-backs."""
@@ -130,6 +136,7 @@ def evaluate(pnl_config: dict) -> dict:
             "annual_rate": annual_rate,
             "term_years": term_years,
             "min_dscr": min_dscr,
+            "owner_draw_reserve": owner_draw_reserve,
         },
     }
 
@@ -143,11 +150,32 @@ def evaluate(pnl_config: dict) -> dict:
         result["asking_price_dscr"] = dscr(available_cash_flow, annual_debt_service)
         result["asking_price_passes_dscr"] = result["asking_price_dscr"] >= min_dscr
 
+        # Stress test: sellers inflate add-backs, so see how the deal holds
+        # up if real SDE comes in below the claimed figure.
+        result["stress_test"] = {
+            f"{int(h * 100)}%": dscr(sde * (1 - h) - owner_draw_reserve, annual_debt_service)
+            for h in STRESS_HAIRCUTS
+        }
+        if sde > 0:
+            result["break_even_sde_haircut"] = (
+                1 - (min_dscr * annual_debt_service + owner_draw_reserve) / sde
+            )
+
+    risk_factors = pnl_config.get("risk_factors")
+    if risk_factors:
+        multiple, notes = suggested_multiple(multiple_low, multiple_high, risk_factors)
+        result["risk_adjusted_multiple"] = multiple
+        result["risk_adjusted_multiple_notes"] = notes
+        result["risk_adjusted_value"] = sde * multiple
+
     return result
 
 
 def print_report(result: dict) -> None:
     print("=== Valuation Report ===")
+    if not result["financing_assumptions"]["owner_draw_reserve"]:
+        print("WARNING: owner_draw_reserve is 0, so DSCR below assumes the buyer works for free. "
+              "Lenders test coverage after a market-rate owner salary; set deal_assumptions.owner_draw_reserve.")
     print(f"SDE (net profit + owner comp + add-backs): ${result['sde']:,.0f}")
     if result["ebitda_adjusted"] is not None:
         print(f"Adjusted EBITDA (SDE - market manager salary): ${result['ebitda_adjusted']:,.0f}")
@@ -164,6 +192,19 @@ def print_report(result: dict) -> None:
         print(f"DSCR at asking price: {result['asking_price_dscr']:.2f}")
         verdict = "PASSES" if result["asking_price_passes_dscr"] else "FAILS"
         print(f"-> {verdict} the minimum DSCR test")
+        print("DSCR if real SDE is lower than claimed: "
+              + ", ".join(f"-{k}: {v:.2f}" for k, v in result["stress_test"].items()))
+        if "break_even_sde_haircut" in result:
+            print(f"Deal stops financing if SDE is overstated by more than "
+                  f"{result['break_even_sde_haircut']:.0%}")
+
+    if "risk_adjusted_multiple" in result:
+        print()
+        print(f"--- Risk-adjusted view ---")
+        print(f"Suggested multiple: {result['risk_adjusted_multiple']:.2f}x "
+              f"-> ${result['risk_adjusted_value']:,.0f}")
+        if result["risk_adjusted_multiple_notes"]:
+            print("Drivers: " + "; ".join(result["risk_adjusted_multiple_notes"]))
 
 
 def main(argv: list[str] | None = None) -> int:

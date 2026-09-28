@@ -13,4 +13,5 @@ deal_assumptions:
   annual_rate: 0.115
   term_years: 10
   min_dscr: 1.25
+  owner_draw_reserve: 45000
   asking_price: 750000   # seller is asking well above what cash flow supports

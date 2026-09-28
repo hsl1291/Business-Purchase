@@ -11,3 +11,6 @@ data/raw/*
 data/normalized.csv
 data/ranked.csv
 data/ranked_with_estimate.csv
+data/places_cache.json
+data/deal_comparison.csv
+data/call_sheet.csv

@@ -18,6 +18,16 @@ deal_assumptions:
   annual_rate: 0.115        # SBA 7(a) variable rate ballpark; update to current rate
   term_years: 10
   min_dscr: 1.25
-  owner_draw_reserve: 0     # set >0 if you need to reserve cash for your own living expenses
+  owner_draw_reserve: 65000 # market-rate salary the buyer must be paid from SDE; lenders test DSCR AFTER this
   # market_manager_salary: 55000   # uncomment to also see an EBITDA figure
   asking_price: 320000       # optional: set to test a specific ask against DSCR
+
+# Your diligence assessment. Feeds src/scorecard.py to place the business
+# inside the multiple band (optional; omit any key you haven't assessed).
+risk_factors:
+  owner_dependence: high        # low | medium | high
+  revenue_trend: flat           # growing | flat | declining
+  recurring_revenue: low        # high | medium | low
+  financial_records: adequate   # clean | adequate | messy
+  top_customer_pct: 0.08        # largest customer's share of revenue
+  years_in_business: 27

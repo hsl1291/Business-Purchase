@@ -51,3 +51,32 @@ def test_enrich_real_estate_case_and_whitespace_insensitive(tmp_path):
     df = pd.DataFrame({"principal_name": ["john smith"]})
     result = enrich_real_estate(df, str(assessor_csv))
     assert result.iloc[0] == 1.0
+
+
+def test_enrich_web_presence_uses_cache_and_skips_api(tmp_path, monkeypatch):
+    import json
+
+    from src import enrich
+
+    cache_file = tmp_path / "cache.json"
+    cache_file.write_text(json.dumps({
+        "joe's shop|springfield|il": {"websiteUri": "https://x.com", "userRatingCount": 30, "businessStatus": "OPERATIONAL"}
+    }))
+
+    def boom(*a, **k):
+        raise AssertionError("API should not be called on a cache hit")
+
+    monkeypatch.setattr(enrich, "places_lookup", boom)
+    df = pd.DataFrame({"business_name": ["Joe's Shop"], "city": ["Springfield"], "state": ["IL"]})
+    result = enrich.enrich_web_presence(df, "key", rate_limit_sec=0, cache_path=str(cache_file))
+    assert result.iloc[0] == 0.0
+
+
+def test_enrich_web_presence_does_not_cache_failed_lookups(tmp_path, monkeypatch):
+    from src import enrich
+
+    cache_file = tmp_path / "cache.json"
+    monkeypatch.setattr(enrich, "places_lookup", lambda *a, **k: None)
+    df = pd.DataFrame({"business_name": ["Ghost"], "city": ["X"], "state": ["IL"]})
+    enrich.enrich_web_presence(df, "key", rate_limit_sec=0, cache_path=str(cache_file))
+    assert not cache_file.exists() or "ghost|x|il" not in cache_file.read_text()

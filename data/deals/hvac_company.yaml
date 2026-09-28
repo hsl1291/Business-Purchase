@@ -14,5 +14,6 @@ deal_assumptions:
   annual_rate: 0.115
   term_years: 10
   min_dscr: 1.25
+  owner_draw_reserve: 90000
   market_manager_salary: 75000
   asking_price: 1150000
