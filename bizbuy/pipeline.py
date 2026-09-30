@@ -1,12 +1,11 @@
 """One-command pipeline: raw license CSV -> normalized -> scored -> estimated.
 
-Chains src.ingest, src.score, and src.estimate so you don't have to run each
-step by hand. Enrichment (src.enrich) is a separate, optional step you run
+Chains bizbuy ingest, bizbuy score, and bizbuy estimate so you don't have to run each
+step by hand. Enrichment (bizbuy enrich) is a separate, optional step you run
 in between if you want it -- see README.md.
 
 Usage:
-    python run.py data/raw/state_licenses.csv --config config/scoring.yaml \
-        --benchmarks data/benchmarks.csv --out-dir data/
+    bizbuy run data/raw/state_licenses.csv [--out-dir data]
 """
 from __future__ import annotations
 
@@ -17,9 +16,10 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from src.ingest import normalize
-from src.score import score as score_fn
-from src.estimate import estimate as estimate_fn, load_benchmarks
+from bizbuy.ingest import normalize
+from bizbuy.score import score as score_fn
+from bizbuy.resources import default_path
+from bizbuy.estimate import estimate as estimate_fn, load_benchmarks
 
 
 def run_pipeline(raw_csv: str, config_path: str, benchmarks_path: str, out_dir: str) -> Path:
@@ -57,7 +57,7 @@ def run_pipeline(raw_csv: str, config_path: str, benchmarks_path: str, out_dir: 
     print(f"Done. Top candidate: {final.iloc[0]['business_name']} "
           f"(score {final.iloc[0]['seller_score']:.3f})" if len(final) else "Done. No rows survived filtering.")
     print(f"Fill in 'contacted'/'response' in {final_path} as you do outreach, "
-          f"then run tools/refit_weights.py once you have ~50+ responses logged.")
+          f"then run bizbuy refit once you have ~50+ responses logged.")
 
     return final_path
 
@@ -65,12 +65,17 @@ def run_pipeline(raw_csv: str, config_path: str, benchmarks_path: str, out_dir: 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("raw_csv", help="Path to the raw license/SOS export CSV")
-    parser.add_argument("--config", default="config/scoring.yaml")
-    parser.add_argument("--benchmarks", default="data/benchmarks.csv")
+    parser.add_argument("--config", default=None)
+    parser.add_argument("--benchmarks", default=None)
     parser.add_argument("--out-dir", default="data")
     args = parser.parse_args(argv)
 
-    run_pipeline(args.raw_csv, args.config, args.benchmarks, args.out_dir)
+    run_pipeline(
+        args.raw_csv,
+        args.config or default_path("scoring.yaml"),
+        args.benchmarks or default_path("benchmarks.csv"),
+        args.out_dir,
+    )
     return 0
 
 

@@ -10,7 +10,7 @@ touch. Rules on cold calls/texts vary by state and by whether the number is
 a business line; check them before dialing at volume.
 
 Usage:
-    python tools/make_call_sheet.py data/ranked_with_estimate.csv -n 25 -o data/call_sheet.csv
+    bizbuy callsheet data/ranked_with_estimate.csv -n 25 -o data/call_sheet.csv
 """
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def main(argv: list[str] | None = None) -> int:
 
     df = pd.read_csv(args.ranked_csv)
     if "seller_score" not in df.columns:
-        print("Error: no seller_score column; run src.score / run.py first.", file=sys.stderr)
+        print("Error: no seller_score column; run `bizbuy run` first.", file=sys.stderr)
         return 1
     sheet = build_sheet(df, args.n)
     sheet.to_csv(args.output, index=False)

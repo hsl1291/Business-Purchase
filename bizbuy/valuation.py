@@ -8,7 +8,7 @@ Input is a YAML file describing the P&L and proposed deal terms. See
 data/sample_pnl.yaml for the expected format.
 
 Usage:
-    python -m src.valuation data/sample_pnl.yaml
+    bizbuy value data/sample_pnl.yaml
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ import sys
 
 import yaml
 
-from src.scorecard import suggested_multiple
+from bizbuy.scorecard import suggested_multiple
 
 
 # SDE shortfalls to test against the asking price (fraction of claimed SDE lost)

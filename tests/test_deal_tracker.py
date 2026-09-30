@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.deal_tracker import build_comparison
+from bizbuy.deal_tracker import build_comparison
 
 
 def make_deal(name, net_profit, owner_comp, asking_price, multiple_low=2.0, multiple_high=3.0):

@@ -6,7 +6,7 @@ raw CSV you have into one consistent schema that score.py, estimate.py, and
 downstream tooling can all rely on.
 
 Usage:
-    python -m src.ingest data/raw/state_licenses.csv --config config/scoring.yaml -o data/normalized.csv
+    bizbuy ingest data/raw/state_licenses.csv -o data/normalized.csv
 """
 from __future__ import annotations
 
@@ -15,6 +15,8 @@ import sys
 
 import pandas as pd
 import yaml
+
+from bizbuy.resources import default_path
 
 # The canonical schema every downstream module expects. Optional fields may
 # be blank/NaN if the raw source doesn't provide them.
@@ -87,11 +89,11 @@ def normalize(raw_df: pd.DataFrame, config: dict) -> pd.DataFrame:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("raw_csv", help="Path to the raw license/SOS export CSV")
-    parser.add_argument("--config", required=True, help="Path to config/scoring.yaml")
+    parser.add_argument("--config", default=None, help="Defaults to ./config/scoring.yaml if present, else the bundled copy")
     parser.add_argument("-o", "--output", required=True, help="Path to write the normalized CSV")
     args = parser.parse_args(argv)
 
-    config = load_config(args.config)
+    config = load_config(args.config or default_path("scoring.yaml"))
     raw_df = pd.read_csv(args.raw_csv, dtype=str)
     normalized = normalize(raw_df, config)
     normalized.to_csv(args.output, index=False)

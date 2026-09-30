@@ -1,4 +1,4 @@
-"""Populate the enrichment signals that src/score.py otherwise treats as
+"""Populate the enrichment signals that bizbuy/score.py otherwise treats as
 neutral (0): stale_web_presence and owns_real_estate.
 
 Two different data-availability realities here:
@@ -17,7 +17,7 @@ Two different data-availability realities here:
 
 Usage:
     export GOOGLE_PLACES_API_KEY=...
-    python -m src.enrich data/ranked.csv -o data/ranked_enriched.csv \
+    bizbuy enrich data/ranked.csv -o data/ranked_enriched.csv \
         [--assessor-csv data/assessor_export.csv] [--skip-places]
 """
 from __future__ import annotations
@@ -190,13 +190,13 @@ def main(argv: list[str] | None = None) -> int:
     if not args.assessor_csv:
         print(
             "No --assessor-csv given; owns_real_estate set to neutral 0 for all rows. "
-            "See src/enrich.py docstring for how to get a county export."
+            "See bizbuy/enrich.py docstring for how to get a county export."
         )
 
     df.to_csv(args.output, index=False)
     print(f"Wrote {len(df)} enriched rows -> {args.output}")
     print(
-        "Re-run src.score on this file (it will pick up stale_web_presence / "
+        "Re-run `bizbuy score` on this file (it will pick up stale_web_presence / "
         "owns_real_estate columns automatically) to fold enrichment into the ranking."
     )
     return 0

@@ -9,7 +9,7 @@ you can decide by hand. It also sniffs the date format.
 It suggests; it does not guess silently. Anything ambiguous is flagged.
 
 Usage:
-    python tools/suggest_field_map.py data/raw/state_licenses.csv
+    bizbuy fieldmap data/raw/state_licenses.csv
 """
 from __future__ import annotations
 

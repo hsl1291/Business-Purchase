@@ -1,6 +1,6 @@
 import math
 
-from src.valuation import (
+from bizbuy.valuation import (
     compute_sde,
     compute_ebitda,
     value_range,

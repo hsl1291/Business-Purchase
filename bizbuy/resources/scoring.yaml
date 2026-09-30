@@ -1,4 +1,4 @@
-# Configuration for src/ingest.py and src/score.py
+# Configuration for bizbuy/ingest.py and bizbuy/score.py
 #
 # Edit `field_map` to match whatever license-board or Secretary-of-State CSV
 # you're actually working with. Column names vary a lot by state and agency,
@@ -61,4 +61,4 @@ size_band_fit:
 # lookups this repo does not perform automatically (Google Places API, county
 # assessor records). If you haven't run that enrichment yet, leave the
 # corresponding CSV columns blank and score.py will treat them as 0 (neutral,
-# non-penalizing) rather than error out -- see src/score.py for details.
+# non-penalizing) rather than error out -- see bizbuy/score.py for details.

@@ -1,14 +1,16 @@
 .PHONY: install test demo
 
+# Developer install (editable, with test deps). End users: see install.sh / install.ps1
 install:
-	pip install -r requirements.txt
+	pip install -e ".[dev]"
 
 test:
 	python -m pytest tests -q
 
-# Full pipeline on the bundled sample data
+# Full pipeline on the bundled sample data, in a throwaway workspace
 demo:
-	python run.py data/sample_raw_licenses.csv --out-dir data
-	python tools/make_call_sheet.py data/ranked_with_estimate.csv -n 5 -o data/call_sheet.csv
-	python -m src.valuation data/sample_pnl.yaml
-	python -m src.deal_tracker data/deals -o data/deal_comparison.csv
+	bizbuy init demo-workspace
+	cd demo-workspace && bizbuy run samples/sample_raw_licenses.csv --out-dir data \
+	  && bizbuy callsheet data/ranked_with_estimate.csv -n 5 -o data/call_sheet.csv \
+	  && bizbuy value samples/sample_pnl.yaml \
+	  && bizbuy deals samples/deals -o data/deal_comparison.csv

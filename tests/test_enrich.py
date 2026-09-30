@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.enrich import score_stale_from_place, enrich_real_estate
+from bizbuy.enrich import score_stale_from_place, enrich_real_estate
 
 
 def test_score_stale_from_place_none_is_neutral():
@@ -56,7 +56,7 @@ def test_enrich_real_estate_case_and_whitespace_insensitive(tmp_path):
 def test_enrich_web_presence_uses_cache_and_skips_api(tmp_path, monkeypatch):
     import json
 
-    from src import enrich
+    from bizbuy import enrich
 
     cache_file = tmp_path / "cache.json"
     cache_file.write_text(json.dumps({
@@ -73,7 +73,7 @@ def test_enrich_web_presence_uses_cache_and_skips_api(tmp_path, monkeypatch):
 
 
 def test_enrich_web_presence_does_not_cache_failed_lookups(tmp_path, monkeypatch):
-    from src import enrich
+    from bizbuy import enrich
 
     cache_file = tmp_path / "cache.json"
     monkeypatch.setattr(enrich, "places_lookup", lambda *a, **k: None)

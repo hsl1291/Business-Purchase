@@ -1,4 +1,4 @@
-# Sample input for src/valuation.py.
+# Sample input for bizbuy/valuation.py.
 # Numbers here are illustrative -- an auto repair shop doing roughly
 # $700k/year revenue with a single owner-operator.
 
@@ -22,7 +22,7 @@ deal_assumptions:
   # market_manager_salary: 55000   # uncomment to also see an EBITDA figure
   asking_price: 320000       # optional: set to test a specific ask against DSCR
 
-# Your diligence assessment. Feeds src/scorecard.py to place the business
+# Your diligence assessment. Feeds bizbuy/scorecard.py to place the business
 # inside the multiple band (optional; omit any key you haven't assessed).
 risk_factors:
   owner_dependence: high        # low | medium | high

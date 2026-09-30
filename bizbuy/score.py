@@ -6,7 +6,7 @@ to call first. Treat the output as a prioritized call list, not a list of
 sellers -- see README.md for expected response rates.
 
 Usage:
-    python -m src.score data/normalized.csv --config config/scoring.yaml -o data/ranked.csv
+    bizbuy score data/normalized.csv -o data/ranked.csv
 """
 from __future__ import annotations
 
@@ -16,6 +16,8 @@ from datetime import datetime
 
 import pandas as pd
 import yaml
+
+from bizbuy.resources import default_path
 
 
 def load_config(config_path: str) -> dict:
@@ -149,12 +151,12 @@ def score(df: pd.DataFrame, config: dict, now: datetime | None = None) -> pd.Dat
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("normalized_csv", help="Path to the normalized CSV from src.ingest")
-    parser.add_argument("--config", required=True, help="Path to config/scoring.yaml")
+    parser.add_argument("normalized_csv", help="Path to the normalized CSV from bizbuy.ingest")
+    parser.add_argument("--config", default=None, help="Defaults to ./config/scoring.yaml if present, else the bundled copy")
     parser.add_argument("-o", "--output", required=True, help="Path to write the ranked CSV")
     args = parser.parse_args(argv)
 
-    config = load_config(args.config)
+    config = load_config(args.config or default_path("scoring.yaml"))
     df = pd.read_csv(args.normalized_csv, parse_dates=["issue_date", "renewal_date"])
     ranked = score(df, config)
     ranked.to_csv(args.output, index=False)

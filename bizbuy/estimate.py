@@ -12,7 +12,7 @@ Formula per row:
     value_high    = sde_est * multiple_high
 
 Usage:
-    python -m src.estimate data/ranked.csv --benchmarks data/benchmarks.csv -o data/ranked_with_estimate.csv
+    bizbuy estimate data/ranked.csv -o data/ranked_with_estimate.csv
 """
 from __future__ import annotations
 
@@ -20,6 +20,8 @@ import argparse
 import sys
 
 import pandas as pd
+
+from bizbuy.resources import default_path
 
 
 def load_benchmarks(path: str) -> pd.DataFrame:
@@ -69,13 +71,13 @@ def estimate(df: pd.DataFrame, benchmarks: pd.DataFrame) -> pd.DataFrame:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("ranked_csv", help="Path to a ranked CSV (from src.score) or any CSV with naics_code/employee_count")
-    parser.add_argument("--benchmarks", required=True, help="Path to data/benchmarks.csv")
+    parser.add_argument("ranked_csv", help="Path to a ranked CSV (from bizbuy.score) or any CSV with naics_code/employee_count")
+    parser.add_argument("--benchmarks", default=None, help="Defaults to ./config/benchmarks.csv if present, else the bundled copy")
     parser.add_argument("-o", "--output", required=True, help="Path to write the CSV with estimates added")
     args = parser.parse_args(argv)
 
     df = pd.read_csv(args.ranked_csv)
-    benchmarks = load_benchmarks(args.benchmarks)
+    benchmarks = load_benchmarks(args.benchmarks or default_path("benchmarks.csv"))
     result = estimate(df, benchmarks)
     result.to_csv(args.output, index=False)
 

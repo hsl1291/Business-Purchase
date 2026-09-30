@@ -2,8 +2,8 @@ import math
 
 import pytest
 
-from src.scorecard import band_position, suggested_multiple
-from src.valuation import evaluate
+from bizbuy.scorecard import band_position, suggested_multiple
+from bizbuy.valuation import evaluate
 
 
 def test_no_factors_lands_mid_band():

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from tools.suggest_field_map import sniff_date_format, suggest
+from bizbuy.suggest_field_map import sniff_date_format, suggest
 
 
 def test_suggest_maps_typical_headers():

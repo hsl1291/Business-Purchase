@@ -1,6 +1,6 @@
 """Track and compare multiple candidate deals side by side.
 
-Where src.valuation evaluates one P&L YAML at a time, this runs it across a
+Where bizbuy valuation evaluates one P&L YAML at a time, this runs it across a
 directory of them and produces one comparison table -- sorted by whichever
 column you care about (default: how much cushion the asking price has above
 the minimum DSCR).
@@ -8,7 +8,7 @@ the minimum DSCR).
 Usage:
     # Put one YAML per candidate deal in a directory (same format as
     # data/sample_pnl.yaml), then:
-    python -m src.deal_tracker data/deals/ -o data/deal_comparison.csv
+    bizbuy deals data/deals/ -o data/deal_comparison.csv
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 
-from src.valuation import evaluate
+from bizbuy.valuation import evaluate
 
 
 def load_deals(deals_dir: str) -> list[tuple[str, dict]]:

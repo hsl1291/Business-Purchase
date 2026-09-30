@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.ingest import normalize
+from bizbuy.ingest import normalize
 
 
 CONFIG = {

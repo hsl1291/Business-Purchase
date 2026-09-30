@@ -6,11 +6,8 @@ venv/
 
 # Raw license/SOS exports may contain personal info (owner names, addresses).
 # Keep them local unless you've confirmed they're fine to commit.
-data/raw/*
-!data/raw/.gitkeep
-data/normalized.csv
-data/ranked.csv
-data/ranked_with_estimate.csv
-data/places_cache.json
-data/deal_comparison.csv
-data/call_sheet.csv
+data/
+
+# Workspaces created by `bizbuy init` / `make demo`
+demo-workspace/
+*.egg-info/

@@ -16,7 +16,7 @@ Usage:
     # In your ranked CSV, fill in 'response' with 1 (positive reply) or
     # 0 (no response / not interested) for every row you've contacted.
     # Leave 'response' blank for rows you haven't contacted yet.
-    python tools/refit_weights.py data/ranked_with_estimate.csv
+    bizbuy refit data/ranked_with_estimate.csv
 """
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def refit(labeled: pd.DataFrame) -> dict[str, float]:
 
     signal_cols = [c for c in labeled.columns if c.startswith("signal_")]
     if not signal_cols:
-        raise ValueError("No signal_* columns found -- run src.score first so signals are present.")
+        raise ValueError("No signal_* columns found -- run `bizbuy score` first so signals are present.")
 
     X = labeled[signal_cols].fillna(0.0)
     y = labeled["response"]

@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from src.score import (
+from bizbuy.score import (
     score_license_age,
     score_single_principal,
     score_renewal_lapse,
