@@ -31,3 +31,50 @@ jobs:
           bizbuy callsheet data/ranked_with_estimate.csv -n 5 -o data/call_sheet.csv
           bizbuy value samples/sample_pnl.yaml
           bizbuy deals samples/deals -o data/deals.csv
+
+  installer-unix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install from this checkout, then use and update
+        run: |
+          git checkout -B ci-test
+          BIZBUY_REPO="$GITHUB_WORKSPACE" bash install.sh
+          export PATH="$HOME/.local/bin:$PATH"
+          bizbuy version
+          bizbuy init "$RUNNER_TEMP/ws" && cd "$RUNNER_TEMP/ws"
+          bizbuy run samples/sample_raw_licenses.csv
+          bizbuy update --check
+
+  installer-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install from this checkout, then use and update
+        shell: pwsh
+        run: |
+          git checkout -B ci-test
+          $env:BIZBUY_REPO = $env:GITHUB_WORKSPACE
+          ./install.ps1
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $bb = Join-Path $env:USERPROFILE ".bizbuy\venv\Scripts\bizbuy.exe"
+          & $bb version
+          & $bb init "$env:RUNNER_TEMP\ws"
+          Set-Location "$env:RUNNER_TEMP\ws"
+          & $bb run samples\sample_raw_licenses.csv
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          & $bb update --check
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
