@@ -36,11 +36,35 @@ def _open_when_ready(url: str, port: int, timeout: float = 60) -> None:
             time.sleep(0.5)
 
 
+def auto_update_enabled(workspace: Path) -> bool:
+    """On unless turned off with BIZBUY_NO_AUTO_UPDATE=1 or in the app's Settings page."""
+    if os.environ.get("BIZBUY_NO_AUTO_UPDATE") == "1":
+        return False
+    settings = workspace / "config" / "app.yaml"
+    try:
+        import yaml
+        return bool((yaml.safe_load(settings.read_text()) or {}).get("auto_update", True))
+    except (OSError, ValueError):
+        return True
+    except Exception:  # malformed YAML: fail open, updates are the safe default
+        return True
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="bizbuy gui", description=__doc__)
     parser.add_argument("--workspace", help="Folder for your data (default: ~/BizBuy)")
     parser.add_argument("--no-browser", action="store_true", help="Don't open a browser tab")
+    parser.add_argument("--no-update", action="store_true", help="Skip the automatic update check")
     args = parser.parse_args(argv)
+
+    workspace = Path(args.workspace or os.environ.get("BIZBUY_WORKSPACE") or Path.home() / "BizBuy").expanduser()
+    if not args.no_update and auto_update_enabled(workspace):
+        from bizbuy.update import auto_update
+
+        print("Checking GitHub for updates...")
+        status = auto_update()
+        if status:
+            print(status)
 
     try:
         import streamlit  # noqa: F401

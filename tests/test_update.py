@@ -95,3 +95,59 @@ def test_quiet_check_reports_behind(repos):
 def test_quiet_check_never_raises(tmp_path):
     (tmp_path / ".git").mkdir()  # looks like a git install but isn't valid
     assert update.updates_available_quietly(tmp_path) is None
+
+
+# ---------------------------------------------------------------- auto_update
+
+def test_auto_update_pulls_when_behind(repos):
+    remote, install = repos
+    push_change(remote)
+    msg = update.auto_update(install)
+    assert msg and msg.startswith("Updated to the latest version")
+    assert (install / "code.py").read_text() == "v = 2\n"
+
+
+def test_auto_update_silent_when_current(repos):
+    _, install = repos
+    assert update.auto_update(install) is None
+
+
+def test_auto_update_never_raises_when_github_unreachable(repos):
+    _, install = repos
+    git(install, "remote", "set-url", "origin", str(install.parent / "does-not-exist"))
+    msg = update.auto_update(install)
+    assert msg.startswith("Couldn't check GitHub")
+    assert (install / "code.py").read_text() == "v = 1\n"
+
+
+def test_auto_update_skips_dirty_install(repos):
+    remote, install = repos
+    push_change(remote)
+    (install / "code.py").write_text("my hack\n")
+    assert "local code edits" in update.auto_update(install)
+    assert (install / "code.py").read_text() == "my hack\n"
+
+
+def test_auto_update_follows_new_default_branch(repos):
+    """Feature branch merged to a new default branch and deleted: installs follow."""
+    remote, install = repos
+    git(remote, "checkout", "-q", "-b", "trunk")
+    push_change(remote, text="v = 3\n")
+    git(remote, "branch", "-q", "-D", "main")
+    msg = update.auto_update(install)
+    assert msg and "trunk @" in msg
+    assert (install / "code.py").read_text() == "v = 3\n"
+    assert update.auto_update(install) is None  # and stays put afterwards
+
+
+def test_gui_respects_auto_update_setting(tmp_path, monkeypatch):
+    from bizbuy.gui import auto_update_enabled
+
+    monkeypatch.delenv("BIZBUY_NO_AUTO_UPDATE", raising=False)
+    assert auto_update_enabled(tmp_path) is True  # default on, no settings file
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "app.yaml").write_text("auto_update: false\n")
+    assert auto_update_enabled(tmp_path) is False
+    (tmp_path / "config" / "app.yaml").write_text("auto_update: true\n")
+    monkeypatch.setenv("BIZBUY_NO_AUTO_UPDATE", "1")
+    assert auto_update_enabled(tmp_path) is False

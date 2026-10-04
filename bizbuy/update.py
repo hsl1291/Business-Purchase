@@ -80,8 +80,68 @@ def updates_available_quietly(root: Path = INSTALL_ROOT) -> int | None:
         return None
 
 
+def _is_dirty(root: Path) -> bool:
+    return bool(_git(root, "status", "--porcelain", "--untracked-files=no"))
+
+
+def _pull_and_sync(root: Path, interactive: bool = True) -> None:
+    """Fast-forward to upstream; reinstall dependencies only if they changed."""
+    reqs = root / "requirements.txt"
+    before = _file_hash(reqs)
+    _git(root, "pull", "--ff-only", "--quiet", interactive=interactive,
+         timeout=None if interactive else 120)
+    if _file_hash(reqs) != before:
+        print("Dependencies changed; installing...")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--quiet", "--disable-pip-version-check",
+             "-r", str(reqs)], check=True,
+        )
+
+
+def follow_default_branch(root: Path = INSTALL_ROOT, interactive: bool = True) -> str | None:
+    """Switch the install to GitHub's default branch if it has moved.
+
+    Installs should track whatever the repo's default branch is (e.g. after a
+    feature branch is merged into main and deleted), not whichever branch was
+    the default on install day. Returns the new branch name if it switched.
+    """
+    _git(root, "remote", "set-head", "origin", "--auto", interactive=interactive,
+         timeout=None if interactive else 20)
+    default = _git(root, "symbolic-ref", "--short", "refs/remotes/origin/HEAD").removeprefix("origin/")
+    current = _git(root, "rev-parse", "--abbrev-ref", "HEAD")
+    if not default or default == current:
+        return None
+    _git(root, "checkout", "--quiet", "-B", default, "--track", f"origin/{default}")
+    return default
+
+
+def auto_update(root: Path = INSTALL_ROOT) -> str | None:
+    """Run at app launch: bring the install up to date from GitHub.
+
+    Never prompts and never raises: if GitHub can't be reached (offline, not
+    signed in), it says so and the app opens on the version already installed.
+    Returns a one-line status, or None if nothing needed saying.
+    """
+    if not is_git_install(root):
+        return None
+    try:
+        if _is_dirty(root):
+            return "Skipped automatic update: the install folder has local code edits."
+        _git(root, "fetch", "--quiet", "--prune", interactive=False, timeout=20)
+        switched = follow_default_branch(root, interactive=False)
+        behind = int(_git(root, "rev-list", "--count", "HEAD..@{u}"))
+        if behind:
+            _pull_and_sync(root, interactive=False)
+        if switched or behind:
+            return f"Updated to the latest version: {current_version(root)}"
+        return None
+    except (UpdateError, ValueError, OSError, subprocess.CalledProcessError) as e:
+        first_line = str(e).splitlines()[0] if str(e) else type(e).__name__
+        return f"Couldn't check GitHub for updates ({first_line}). Opening the installed version."
+
+
 def update_git_install(root: Path = INSTALL_ROOT, check_only: bool = False) -> str:
-    if _git(root, "status", "--porcelain", "--untracked-files=no"):
+    if _is_dirty(root):
         raise UpdateError(
             f"The install at {root} has local code edits, so a pull could "
             "clobber them. Commit or discard them (git -C <path> stash), then retry. "
@@ -89,20 +149,18 @@ def update_git_install(root: Path = INSTALL_ROOT, check_only: bool = False) -> s
         )
 
     behind = check(root)
+    if not check_only:
+        switched = follow_default_branch(root)
+        if switched:
+            behind = int(_git(root, "rev-list", "--count", "HEAD..@{u}"))
+            if not behind:
+                return f"Switched to the default branch. Now at {current_version(root)}"
     if behind == 0:
         return f"Already up to date: {current_version(root)}"
     if check_only:
         return f"{behind} update(s) available. Run `bizbuy update` to install."
 
-    reqs = root / "requirements.txt"
-    before = _file_hash(reqs)
-    _git(root, "pull", "--ff-only", "--quiet")
-
-    if _file_hash(reqs) != before:
-        print("Dependencies changed; installing...")
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--quiet", "-r", str(reqs)], check=True
-        )
+    _pull_and_sync(root)
     return f"Updated {behind} commit(s). Now at {current_version(root)}"
 
 

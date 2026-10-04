@@ -414,6 +414,21 @@ def page_settings(ws: Path) -> None:
 
     st.subheader("Updates")
     st.write(f"Installed version: **{current_version()}**")
+    app_settings_path = ws / "config" / "app.yaml"
+    try:
+        app_settings = yaml.safe_load(app_settings_path.read_text()) or {}
+    except OSError:
+        app_settings = {}
+    auto = st.toggle(
+        "Update automatically from GitHub each time BizBuy opens",
+        value=bool(app_settings.get("auto_update", True)),
+        help="BizBuy checks GitHub when it starts and installs anything new before opening. "
+             "If GitHub can't be reached, it opens the version you have.",
+    )
+    if auto != bool(app_settings.get("auto_update", True)):
+        app_settings["auto_update"] = auto
+        app_settings_path.write_text(yaml.safe_dump(app_settings))
+        st.success("Saved.")
     if not is_git_install():
         st.info("This copy wasn't installed with the installer, so it can't update itself from here.")
     else:
@@ -431,6 +446,8 @@ def page_settings(ws: Path) -> None:
                     st.success(msg)
                     if "Updated" in msg:
                         st.warning("Close this window and the BizBuy console, then reopen BizBuy to use the new version.")
+                    elif "Switched" in msg:
+                        st.warning("Close and reopen BizBuy to use it.")
                 except UpdateError as e:
                     st.error(str(e))
                 except subprocess.CalledProcessError:

@@ -36,23 +36,28 @@ in place.
 Prefer a terminal? Run `powershell -ExecutionPolicy Bypass -File install.ps1`
 (Windows) or `bash install.sh` (Mac/Linux).
 
-## Update
+## Updates are automatic
 
-The app checks for updates on its own and shows a notice in the sidebar when
-one is available. Install it from **Settings & updates → Update now**, then
-close and reopen BizBuy. From a terminal, the same thing is:
+You install once. After that, **every time you open BizBuy it checks GitHub
+and installs anything new before the app opens**. There's nothing to
+download and nothing to reinstall. You'll see "Checking GitHub for updates..."
+in the console window, and "Updated to the latest version" when there was
+something new.
 
-```bash
-bizbuy update --check   # anything new?
-bizbuy update           # install it
-bizbuy version          # branch, commit and date you're on
-```
+- If GitHub can't be reached (offline, or not signed in), BizBuy opens the
+  version you already have and tries again next time.
+- Installs follow the repo's **default branch** on GitHub. If that changes
+  (say a branch is merged into `main` and deleted), installs switch over on
+  their own.
+- To update mid-session, use **Settings & updates → Update now**, then close and
+  reopen BizBuy. You can turn automatic updates off on the same page.
+- Your data folder (`~/BizBuy`) is never touched by an update. An update is
+  skipped if someone edited code inside the install folder, so those edits
+  aren't overwritten.
 
-`bizbuy update` runs `git pull` on the install. Dependencies are reinstalled only
-when `requirements.txt` changed. Your data folder is never touched. The update
-refuses to run if someone edited code inside the install folder, so those edits
-can't be silently overwritten. If an update ever fails partway through, close
-BizBuy and run the installer again.
+From a terminal: `bizbuy update --check`, `bizbuy update`, `bizbuy version`.
+Re-running the installer is only needed if an update fails partway through
+(it repairs in place).
 
 ## The app
 
