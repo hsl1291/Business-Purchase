@@ -427,6 +427,7 @@ def page_settings(ws: Path) -> None:
             with st.spinner("Pulling the latest version..."):
                 try:
                     msg = update_git_install()
+                    updates_behind.clear()
                     st.success(msg)
                     if "Updated" in msg:
                         st.warning("Close this window and the BizBuy console, then reopen BizBuy to use the new version.")
