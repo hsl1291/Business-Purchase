@@ -84,3 +84,14 @@ def test_refuses_when_install_has_local_edits(repos):
 def test_version_string(repos):
     _, install = repos
     assert "main @" in update.current_version(install)
+
+
+def test_quiet_check_reports_behind(repos):
+    remote, install = repos
+    push_change(remote)
+    assert update.updates_available_quietly(install) == 1
+
+
+def test_quiet_check_never_raises(tmp_path):
+    (tmp_path / ".git").mkdir()  # looks like a git install but isn't valid
+    assert update.updates_available_quietly(tmp_path) is None

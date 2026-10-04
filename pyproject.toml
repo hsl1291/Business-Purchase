@@ -23,4 +23,4 @@ dependencies = { file = ["requirements.txt"] }
 include = ["bizbuy*"]
 
 [tool.setuptools.package-data]
-bizbuy = ["resources/*.yaml", "resources/*.csv", "resources/samples/*", "resources/samples/deals/*"]
+bizbuy = ["resources/*.yaml", "resources/*.csv", "resources/samples/*", "resources/samples/deals/*", "gui/*.py"]

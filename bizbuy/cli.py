@@ -1,5 +1,6 @@
 """`bizbuy` command-line entry point.
 
+    bizbuy gui                 open the point-and-click app in your browser
     bizbuy init [DIR]          create a workspace with editable config + samples
     bizbuy run RAW_CSV         ingest -> score -> estimate in one step
     bizbuy callsheet CSV       top-N outreach sheet with reasons
@@ -24,6 +25,7 @@ from bizbuy.resources import RESOURCE_DIR
 
 # command -> (module, one-line help)
 COMMANDS: dict[str, tuple[str, str]] = {
+    "gui": ("bizbuy.gui", "open the point-and-click app in your browser"),
     "run": ("bizbuy.pipeline", "ingest -> score -> estimate in one step"),
     "callsheet": ("bizbuy.make_call_sheet", "top-N outreach sheet with reasons"),
     "value": ("bizbuy.valuation", "post-NDA valuation of one deal"),

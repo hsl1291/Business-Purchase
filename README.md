@@ -12,55 +12,73 @@ industry risk — is still yours.
 
 ## Install
 
-You need **Python 3.10+** and **git**. The installer clones this repo into
-`~/.bizbuy/app` (Windows: `%USERPROFILE%\.bizbuy\app`), creates a private
-Python environment next to it, and puts a `bizbuy` command on your PATH.
-Nothing is installed system-wide.
+1. On GitHub, click **Code → Download ZIP**, and unzip it anywhere (for
+   example, Downloads).
+2. Double-click the installer in the unzipped folder:
+   - **Windows:** `Install BizBuy.cmd`. If Windows shows "Windows protected
+     your PC", click **More info → Run anyway**.
+   - **Mac:** `Install BizBuy.command`. If macOS says it can't be opened,
+     right-click it and choose **Open**.
+3. Answer its questions. If Python or Git is missing, it offers to install it
+   (via winget on Windows, Homebrew on a Mac). The first time it downloads the
+   app, sign in to GitHub when asked.
 
-**Windows** (PowerShell): download `install.ps1` from this repo, then
+When it finishes, BizBuy opens in your browser. Afterwards, open it from the
+**BizBuy** shortcut on your Desktop (Windows: also the Start menu). A small
+console window opens with it; that window *is* the app, so leave it open while
+you work and close it to quit.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File install.ps1
-```
+The installer keeps everything in `~/.bizbuy` (Windows:
+`%USERPROFILE%\.bizbuy`) and your data in `~/BizBuy`. Nothing is installed
+system-wide besides Python and Git. You can run it again any time; it updates
+in place.
 
-Open a new terminal afterwards so the PATH change takes effect.
-
-**macOS / Linux:**
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/hsl1291/Business-Purchase/HEAD/install.sh | bash
-```
-
-If the repo is private, the `curl` link won't work. Instead, download
-`install.sh` while signed in to GitHub, run `bash install.sh`, and sign in when
-git asks.
+Prefer a terminal? Run `powershell -ExecutionPolicy Bypass -File install.ps1`
+(Windows) or `bash install.sh` (Mac/Linux).
 
 ## Update
 
+The app checks for updates on its own and shows a notice in the sidebar when
+one is available. Install it from **Settings & updates → Update now**, then
+close and reopen BizBuy. From a terminal, the same thing is:
+
 ```bash
-bizbuy update --check   # see whether anything new is available
-bizbuy update           # pull it
+bizbuy update --check   # anything new?
+bizbuy update           # install it
 bizbuy version          # branch, commit and date you're on
 ```
 
 `bizbuy update` runs `git pull` on the install. Dependencies are reinstalled only
-when `requirements.txt` changed. Your workspace is never touched, because it lives
-in a separate folder. The update refuses to run if someone edited code inside the
-install folder, so those edits can't be silently overwritten. If an update ever
-adds a new command that doesn't show up, re-run the installer. That's safe, and it
-updates in place.
+when `requirements.txt` changed. Your data folder is never touched. The update
+refuses to run if someone edited code inside the install folder, so those edits
+can't be silently overwritten. If an update ever fails partway through, close
+BizBuy and run the installer again.
 
-## Get started
+## The app
+
+| Page | What it does |
+|---|---|
+| Find sellers | Upload a license export (CSV). It matches the columns for you, scores every business, explains why each was flagged, and gives you a call sheet to download |
+| Value a deal | Enter the P&L, add-backs, price and risk factors. You get the value range, the most an SBA loan can support, the loan coverage at the asking price, and a stress test. Save deals for later |
+| Compare deals | Every saved deal side by side |
+| Learn from outreach | Upload a ranked list with replies filled in to see which signals actually predict a willing seller |
+| Settings & updates | Score weights, filters, and the update button |
+
+## Command line
+
+Everything in the app is also available as a command.
+
 
 ```bash
-bizbuy init ~/BizBuy          # workspace: editable config + sample data
+bizbuy gui                    # the point-and-click app
+bizbuy init ~/BizBuy          # workspace: editable config + sample data (the app does this for you)
 cd ~/BizBuy
 bizbuy run samples/sample_raw_licenses.csv
 ```
 
 A workspace contains the following:
 
-| Folder | What goes there |
+| Folder (`~/BizBuy`) | What goes there |
 |---|---|
 | `config/scoring.yaml` | Signal weights, filters, and the column mapping for your license export |
 | `config/benchmarks.csv` | NAICS benchmarks: revenue/employee, SDE margin, multiple range |
@@ -71,7 +89,7 @@ A workspace contains the following:
 Commands use `./config/…` when you run them inside a workspace. Anywhere else,
 they fall back to the bundled defaults.
 
-## Commands
+### Commands
 
 ```bash
 # New license export: draft the column mapping, paste it into config/scoring.yaml

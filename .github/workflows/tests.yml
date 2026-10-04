@@ -50,9 +50,16 @@ jobs:
           BIZBUY_REPO="$GITHUB_WORKSPACE" bash install.sh
           export PATH="$HOME/.local/bin:$PATH"
           bizbuy version
+          if [ "$(uname)" = Darwin ]; then test -x "$HOME/Desktop/BizBuy.command"; else test -f "$HOME/.local/share/applications/bizbuy.desktop"; fi
           bizbuy init "$RUNNER_TEMP/ws" && cd "$RUNNER_TEMP/ws"
           bizbuy run samples/sample_raw_licenses.csv
           bizbuy update --check
+      - name: The app starts and serves
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          BIZBUY_WORKSPACE="$RUNNER_TEMP/ws" bizbuy gui --no-browser > gui.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8501/_stcore/health && exit 0; sleep 1; done
+          cat gui.log; exit 1
 
   installer-windows:
     runs-on: windows-latest
@@ -68,13 +75,25 @@ jobs:
         run: |
           git checkout -B ci-test
           $env:BIZBUY_REPO = $env:GITHUB_WORKSPACE
-          ./install.ps1
+          ./install.ps1 -Yes
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           $bb = Join-Path $env:USERPROFILE ".bizbuy\venv\Scripts\bizbuy.exe"
           & $bb version
+          $lnk = Join-Path ([Environment]::GetFolderPath("Desktop")) "BizBuy.lnk"
+          if (-not (Test-Path $lnk)) { Write-Error "Desktop shortcut missing"; exit 1 }
           & $bb init "$env:RUNNER_TEMP\ws"
           Set-Location "$env:RUNNER_TEMP\ws"
           & $bb run samples\sample_raw_licenses.csv
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           & $bb update --check
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: The app starts and serves
+        shell: pwsh
+        run: |
+          $bb = Join-Path $env:USERPROFILE ".bizbuy\venv\Scripts\bizbuy.exe"
+          $env:BIZBUY_WORKSPACE = "$env:RUNNER_TEMP\ws"
+          Start-Process -FilePath $bb -ArgumentList "gui", "--no-browser" -RedirectStandardOutput gui.log -RedirectStandardError gui.err
+          foreach ($i in 1..60) {
+            try { Invoke-WebRequest -UseBasicParsing http://127.0.0.1:8501/_stcore/health | Out-Null; exit 0 } catch { Start-Sleep 1 }
+          }
+          Get-Content gui.log, gui.err; exit 1

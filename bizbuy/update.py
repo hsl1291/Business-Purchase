@@ -11,6 +11,7 @@ no checkout to pull, so it falls back to `pip install --upgrade git+<repo>`.
 from __future__ import annotations
 
 import hashlib
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -23,11 +24,18 @@ class UpdateError(RuntimeError):
     pass
 
 
-def _git(root: Path, *args: str) -> str:
+def _git(root: Path, *args: str, interactive: bool = True, timeout: float | None = None) -> str:
+    env = None
+    if not interactive:
+        # Fail fast instead of waiting on a credential prompt nobody can see.
+        env = {**os.environ, "GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never"}
     try:
         proc = subprocess.run(
-            ["git", "-C", str(root), *args], capture_output=True, text=True, check=False
+            ["git", "-C", str(root), *args], capture_output=True, text=True, check=False,
+            env=env, timeout=timeout,
         )
+    except subprocess.TimeoutExpired:
+        raise UpdateError(f"git {args[0]} timed out")
     except FileNotFoundError:
         raise UpdateError("git is not installed or not on PATH.")
     if proc.returncode != 0:
@@ -55,10 +63,21 @@ def current_version(root: Path = INSTALL_ROOT) -> str:
     return f"{branch} @ {commit} ({date})"
 
 
-def check(root: Path = INSTALL_ROOT) -> int:
+def check(root: Path = INSTALL_ROOT, interactive: bool = True) -> int:
     """Return how many commits the install is behind its upstream."""
-    _git(root, "fetch", "--quiet")
+    _git(root, "fetch", "--quiet", interactive=interactive, timeout=None if interactive else 20)
     return int(_git(root, "rev-list", "--count", "HEAD..@{u}"))
+
+
+def updates_available_quietly(root: Path = INSTALL_ROOT) -> int | None:
+    """Background check for the app: never prompts, never raises.
+    Returns commits behind, or None if it couldn't tell."""
+    if not is_git_install(root):
+        return None
+    try:
+        return check(root, interactive=False)
+    except (UpdateError, ValueError, OSError):
+        return None
 
 
 def update_git_install(root: Path = INSTALL_ROOT, check_only: bool = False) -> str:

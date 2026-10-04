@@ -2,3 +2,4 @@ pandas>=2.0
 PyYAML>=6.0
 requests>=2.31       # bizbuy enrich: Google Places lookups
 scikit-learn>=1.3    # bizbuy refit: refitting signal weights from outreach results
+streamlit>=1.50      # bizbuy gui: the point-and-click app
