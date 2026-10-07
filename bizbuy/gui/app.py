@@ -68,7 +68,9 @@ def slugify(name: str) -> str:
 
 
 def money(x) -> str:
-    return "—" if x is None or pd.isna(x) else f"${x:,.0f}"
+    if x is None or pd.isna(x):
+        return "—"
+    return f"-${-x:,.0f}" if x < 0 else f"${x:,.0f}"
 
 
 def md(text: str) -> str:
@@ -313,7 +315,9 @@ def page_value_deal(ws: Path) -> None:
         if r["ebitda_adjusted"] is not None:
             st.metric("Adjusted EBITDA", md(money(r["ebitda_adjusted"])))
         lo, hi = r["sde_multiple_value_range"]
-        st.metric("Value range (SDE × multiple)", md(f"{money(lo)} – {money(hi)}"))
+        low_col, high_col = st.columns(2)
+        low_col.metric("Value, low end", md(money(lo)))
+        high_col.metric("Value, high end", md(money(hi)))
         if "risk_adjusted_value" in r:
             st.metric("Risk-adjusted value", md(money(r["risk_adjusted_value"])),
                       help=f"{r['risk_adjusted_multiple']:.2f}× SDE. " + "; ".join(r["risk_adjusted_multiple_notes"]))
